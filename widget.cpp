@@ -1,0 +1,48 @@
+#include "widget.h"
+#include "ui_widget.h"
+#include <windows.h>
+#include <QDebug>
+#include <QDir>
+#include "folderIconSelector.h"
+#include <QStatusBar>
+#include <QTimer>
+#include <QLayout>
+#include "utils.h"
+
+Widget::Widget(QWidget *parent)
+    : QWidget(parent)
+    , ui(new Ui::Widget)
+{
+    ui->setupUi(this);
+    this->lw = ui->listWidget;
+    setWindowFlag(Qt::WindowMaximizeButtonHint, false);
+
+    // 创建状态栏
+    // QStatusBar *statusBar = new QStatusBar(this);
+    // this->layout()->addWidget(statusBar);
+    // statusBar->showMessage("Ready");
+
+    lw->setAlternatingRowColors(true);
+
+    QTimer::singleShot(100, this, [=](){
+        QDir dir(R"(D:\)");
+        auto dirs = dir.entryList(QDir::AllDirs | QDir::NoDotAndDotDot);
+        for (const auto& name : dirs) {
+            addListItem(dir.absoluteFilePath(name));
+            qApp->processEvents();
+        }
+    });
+}
+
+Widget::~Widget()
+{
+    delete ui;
+}
+
+void Widget::addListItem(const QString& path)
+{
+    QListWidgetItem *item = new QListWidgetItem(lw);
+    FolderIconSelector *customWidget = new FolderIconSelector(path);
+    item->setSizeHint(customWidget->sizeHint());
+    lw->setItemWidget(item, customWidget);
+}
