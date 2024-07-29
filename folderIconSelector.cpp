@@ -24,6 +24,8 @@ FolderIconSelector::FolderIconSelector(const QString& dirPath, QWidget *parent)
 
     connect(ui->btn_apply, &QPushButton::clicked, this, [=](){
         auto filePath = ui->comboBox->currentData().toString();
+        if (filePath.isEmpty()) return;
+
         Util::setFolderIcon(dirPath, filePath);
 
         int selectedIndex = ui->comboBox->currentIndex();

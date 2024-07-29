@@ -7,6 +7,9 @@
 #include <QTimer>
 #include <QLayout>
 #include <QFileDialog>
+#include <QDragEnterEvent>
+#include <QDropEvent>
+#include <QMimeData>
 
 Widget::Widget(QWidget *parent)
     : QWidget(parent)
@@ -16,6 +19,7 @@ Widget::Widget(QWidget *parent)
     this->lw = ui->listWidget;
     setWindowFlag(Qt::WindowMaximizeButtonHint, false);
     setWindowTitle("Dr.Folder - MrBeanC");
+    this->setAcceptDrops(true);
 
     // 创建状态栏
     statusBar = new QStatusBar(this);
@@ -24,16 +28,26 @@ Widget::Widget(QWidget *parent)
     statusBar->showMessage("Ready", 1000);
 
     lw->setAlternatingRowColors(true);
+    lw->hide();
 
-    ui->lineEdit->setReadOnly(true);
+    ui->placeholder->setCursor(Qt::PointingHandCursor);
+    connect(ui->placeholder, &QPushButton::clicked, ui->btn_select, &QToolButton::click);
 
     connect(ui->btn_select, &QToolButton::clicked, this, [=](){
        QString path = QFileDialog::getExistingDirectory(this, "Select a folder");
        ui->lineEdit->setText(QDir::toNativeSeparators(path));
     });
 
-    connect(ui->btn_search, &QToolButton::clicked, this, [=](){
+    connect(ui->btn_subdir, &QToolButton::clicked, this, [=](){
+        if (!beforeAddItems()) return;
+
         listSubDirs(ui->lineEdit->text());
+    });
+
+    connect(ui->btn_self, &QToolButton::clicked, this, [=](){
+        if (!beforeAddItems()) return;
+
+        addListItem(ui->lineEdit->text());
     });
 }
 
@@ -62,4 +76,42 @@ void Widget::listSubDirs(const QString& dirPath)
             qApp->processEvents();
     }
     statusBar->showMessage("Done.", 2000);
+}
+
+bool Widget::beforeAddItems()
+{
+    QString path = ui->lineEdit->text();
+    bool isOk = QFile::exists(path) && QFileInfo(path).isDir();
+
+    if (isOk) {
+        lw->clear();
+        ui->placeholder->hide();
+        lw->show();
+    } else {
+        statusBar->showMessage("Invalid folder path.", 2000);
+    }
+
+    return isOk;
+}
+
+void Widget::dragEnterEvent(QDragEnterEvent* event)
+{
+    if (event->mimeData()->hasUrls()) {
+        event->acceptProposedAction();
+    }
+}
+
+void Widget::dropEvent(QDropEvent* event)
+{
+    QList<QUrl> urls = event->mimeData()->urls();
+    if (urls.isEmpty()) return;
+
+    QString path = urls.first().toLocalFile();
+    if (!QFileInfo(path).isDir()) {
+        statusBar->showMessage("Not a folder.", 2000);
+        return;
+    }
+    ui->lineEdit->setText(QDir::toNativeSeparators(path));
+
+    ui->btn_self->click(); // default Self
 }

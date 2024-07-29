@@ -22,11 +22,17 @@ public:
 private:
     void addListItem(const QString& path);
     void listSubDirs(const QString& dirPath);
+    bool beforeAddItems();
 
 private:
     Ui::Widget *ui;
 
     QListWidget* lw = nullptr;
     QStatusBar *statusBar = nullptr;
+
+    // QWidget interface
+protected:
+    virtual void dragEnterEvent(QDragEnterEvent* event) override;
+    virtual void dropEvent(QDropEvent* event) override;
 };
 #endif // WIDGET_H
