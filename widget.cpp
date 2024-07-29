@@ -7,7 +7,6 @@
 #include <QStatusBar>
 #include <QTimer>
 #include <QLayout>
-#include "utils.h"
 
 Widget::Widget(QWidget *parent)
     : QWidget(parent)
@@ -27,9 +26,11 @@ Widget::Widget(QWidget *parent)
     QTimer::singleShot(100, this, [=](){
         QDir dir(R"(D:\)");
         auto dirs = dir.entryList(QDir::AllDirs | QDir::NoDotAndDotDot);
+        int i = 0;
         for (const auto& name : dirs) {
             addListItem(dir.absoluteFilePath(name));
-            qApp->processEvents();
+            if (++i % 5 == 0)
+                qApp->processEvents();
         }
     });
 }

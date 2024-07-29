@@ -38,10 +38,11 @@ FolderIconSelector::FolderIconSelector(const QString& dirPath, QWidget *parent)
         ui->label->setText(dir.dirName());
         auto files = Util::getExeFiles(dirPath);
         // 展示可选exe图标
-        for (const QString& filePath : files) {
-            QIcon icon = iconPro.icon(QFileInfo(filePath));
-            if (Util::isDefaultExeIcon(icon)) continue;
-            ui->comboBox->addItem(icon, QFileInfo(filePath).fileName(), QDir::toNativeSeparators(filePath));
+        ui->comboBox->setUpdatesEnabled(false);
+        for (const QString& path : files) {
+            if (!Util::hasCustomIcon(path)) continue; // 过滤没有自定义图标的exe
+            QIcon icon = iconPro.icon(QFileInfo(path));
+            ui->comboBox->addItem(icon, QFileInfo(path).fileName(), QDir::toNativeSeparators(path));
         }
         // 选中当前文件夹的图标
         auto iconPath = Util::getFolderIconPath(dirPath);
@@ -50,6 +51,7 @@ FolderIconSelector::FolderIconSelector(const QString& dirPath, QWidget *parent)
             if (index != -1)
                 ui->comboBox->setCurrentIndex(index);
         }
+        ui->comboBox->setUpdatesEnabled(true);
     });
 
 }
@@ -70,9 +72,10 @@ void FolderIconSelector::setIcon(const QIcon& icon)
 
 bool FolderIconSelector::eventFilter(QObject* obj, QEvent* event)
 {
-    // 拦截滚轮事件
-    if(obj == ui->comboBox && event->type() == QEvent::Wheel)
-        return true;
+    if(obj == ui->comboBox) {
+        if (event->type() == QEvent::Wheel) // 拦截滚轮事件
+            return true;
+    }
     return QWidget::eventFilter(obj, event);
 }
 

@@ -53,19 +53,6 @@ QStringList Util::getExeFiles(const QString& dirPath) {
     return res;
 }
 
-QIcon Util::getSystemDefaultExeIcon() {
-    // 获取一个已知的无效路径的图标，通常返回系统默认图标
-    QFileIconProvider iconProvider;
-    return iconProvider.icon(QFileInfo("invalid_path_mrbeanc.exe"));
-}
-
-bool Util::isDefaultExeIcon(const QIcon& icon) {
-    const QSize IconSize(16, 16);
-    static QIcon defaultIcon = getSystemDefaultExeIcon();
-    // QIcon不能直接比较，而QPixmap本身没有定义operator==（调用的是QCursor的），所以需要转为QImage比较
-    return icon.pixmap(IconSize).toImage() == defaultIcon.pixmap(IconSize).toImage();
-}
-
 // 重置文件夹图标
 void Util::restoreFolderIcon(const QString& folderPath)
 {
@@ -81,6 +68,7 @@ void Util::restoreFolderIcon(const QString& folderPath)
     // 而且 Unmake不会删除 desktop.ini
 }
 
+// 直接读取 desktop.ini 的话遇到编码问题
 QString Util::getFolderIconPath(const QString& folderPath) {
     SHFILEINFO shFileInfo;
     ZeroMemory(&shFileInfo, sizeof(SHFILEINFO));
@@ -95,5 +83,33 @@ QString Util::getFolderIconPath(const QString& folderPath) {
     } else {
         return QString();
     }
+}
+
+// Windows API很快，< 1ms，但是假如先获取图标再转为QImage判断，就很慢 > 40ms
+bool Util::hasCustomIcon(const QString& exePath)
+{
+    HMODULE hModule = LoadLibraryEx(exePath.toStdWString().c_str(), NULL, LOAD_LIBRARY_AS_DATAFILE);
+    if (hModule == NULL) {
+        qWarning() << "Failed to load library:" << GetLastError() << exePath;
+        return false;
+    }
+
+    bool hasIcon = false;
+
+    auto enumProc = [](HMODULE hModule, LPCWSTR lpType, LPWSTR lpName, LONG_PTR lParam) -> BOOL {
+        Q_UNUSED(hModule);
+        Q_UNUSED(lpType);
+        Q_UNUSED(lpName);
+
+        bool* result = (bool*)(lParam);
+        *result = true;
+        return FALSE; // Stop enumeration after finding the first icon
+    };
+
+    // 也可以通过返回值判断，但是enumProc不能返回FALSE
+    EnumResourceNames(hModule, RT_GROUP_ICON, enumProc, LONG_PTR(&hasIcon));
+
+    FreeLibrary(hModule);
+    return hasIcon;
 }
 
