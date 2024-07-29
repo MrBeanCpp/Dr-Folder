@@ -3,6 +3,7 @@
 
 #include <QListWidget>
 #include <QWidget>
+#include <QStatusBar>
 
 QT_BEGIN_NAMESPACE
 namespace Ui {
@@ -20,10 +21,12 @@ public:
 
 private:
     void addListItem(const QString& path);
+    void listSubDirs(const QString& dirPath);
 
 private:
     Ui::Widget *ui;
 
     QListWidget* lw = nullptr;
+    QStatusBar *statusBar = nullptr;
 };
 #endif // WIDGET_H
