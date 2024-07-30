@@ -32,7 +32,7 @@ FolderIconSelector::FolderIconSelector(const QString& dirPath, QWidget *parent)
         if (Util::isInDir(iconPath, dirPath)) // 若icon在folder内，则转为相对路径
             iconPath = QDir(dirPath).relativeFilePath(iconPath);
 
-        qDebug() << "set folder icon:" << iconPath << dirPath;
+        qDebug() << "Folder:" << dirPath << "Icon:" << iconPath;
         Util::setFolderIcon(dirPath, iconPath);
 
         setIcon(Util::getFileIcon(dirPath));
@@ -95,6 +95,11 @@ FolderIconSelector::FolderIconSelector(const QString& dirPath, QWidget *parent)
 FolderIconSelector::~FolderIconSelector()
 {
     delete ui;
+}
+
+void FolderIconSelector::applySelectedIcon()
+{
+    ui->btn_apply->click();
 }
 
 void FolderIconSelector::setIcon(const QIcon& icon)

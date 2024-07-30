@@ -15,6 +15,8 @@ public:
     explicit FolderIconSelector(const QString& dirPath, QWidget *parent = nullptr);
     ~FolderIconSelector();
 
+    void applySelectedIcon();
+
 private:
     // set Icon to Label
     void setIcon(const QIcon& icon);

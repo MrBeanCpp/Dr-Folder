@@ -39,9 +39,18 @@ Widget::Widget(QWidget *parent)
     });
 
     connect(ui->btn_applyall, &QToolButton::clicked, this, [=]{
+        if (lw->count() == 0 || lw->isHidden()) return;
+
         auto btn = QMessageBox::question(this, "Apply All", "Are you sure to apply all folder icons?", QMessageBox::Yes | QMessageBox::No);
         if (btn == QMessageBox::Yes) {
-            QMessageBox::information(this, "Warning", "This is a danger operation, provide later~");
+            int count = lw->count();
+            for (int i = 0; i < count; ++i) {
+                QListWidgetItem *item = lw->item(i);
+                FolderIconSelector *widget = qobject_cast<FolderIconSelector*>(lw->itemWidget(item));
+                if (widget) {
+                    widget->applySelectedIcon();
+                }
+            }
         }
     });
 
