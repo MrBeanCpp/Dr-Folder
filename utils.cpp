@@ -147,3 +147,10 @@ QIcon Util::getFileIcon(QString filePath) {
     return icon;
 }
 
+// 对于绝对路径，QDir::exists() 不可靠（for判断是否inDir）
+bool Util::isInDir(const QString& filePath, const QString& dirPath)
+{
+    auto _filePath = QDir::toNativeSeparators(filePath);
+    auto _dirPath = QDir::toNativeSeparators(dirPath);
+    return _filePath.startsWith(_dirPath);
+}

@@ -11,6 +11,7 @@
 #include <QDropEvent>
 #include <QMimeData>
 #include <QMenu>
+#include <QMessageBox>
 
 Widget::Widget(QWidget *parent)
     : QWidget(parent)
@@ -35,6 +36,13 @@ Widget::Widget(QWidget *parent)
 
     connect(ui->lineEdit, &QLineEdit::returnPressed, this, [=]{
         ui->btn_subdir->click();
+    });
+
+    connect(ui->btn_applyall, &QToolButton::clicked, this, [=]{
+        auto btn = QMessageBox::question(this, "Apply All", "Are you sure to apply all folder icons?", QMessageBox::Yes | QMessageBox::No);
+        if (btn == QMessageBox::Yes) {
+            QMessageBox::information(this, "Warning", "This is a danger operation, provide later~");
+        }
     });
 
     connect(ui->btn_select, &QToolButton::clicked, this, [=]{
@@ -85,11 +93,10 @@ void Widget::listSubDirs(const QString& dirPath)
 void Widget::listFolders(const QString& dirPath, bool onlySelf)
 {
     beforeAddItems();
-    if (onlySelf) {
+    if (onlySelf)
         addListItem(dirPath);
-    } else {
+    else
         listSubDirs(dirPath);
-    }
 }
 
 bool Widget::beforeAddItems()

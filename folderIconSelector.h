@@ -19,6 +19,7 @@ private:
     // set Icon to Label
     void setIcon(const QIcon& icon);
     void openFolder();
+    void addIconCandidate(const QString& path);
 
 signals:
     void removeItems(QList<int> idxs);

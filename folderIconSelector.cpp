@@ -11,6 +11,7 @@
 #include <QElapsedTimer>
 #include <QDesktopServices>
 #include <QtConcurrent>
+#include <QFileDialog>
 
 FolderIconSelector::FolderIconSelector(const QString& dirPath, QWidget *parent)
     : QWidget(parent)
@@ -28,14 +29,21 @@ FolderIconSelector::FolderIconSelector(const QString& dirPath, QWidget *parent)
         auto iconPath = ui->comboBox->currentData().toString();
         if (iconPath.isEmpty()) return;
 
-        QDir dir(dirPath);
-        if (dir.exists(iconPath)) // 若icon在folder内，则转为相对路径
+        if (Util::isInDir(iconPath, dirPath)) // 若icon在folder内，则转为相对路径
             iconPath = QDir(dirPath).relativeFilePath(iconPath);
 
         qDebug() << "set folder icon:" << iconPath << dirPath;
         Util::setFolderIcon(dirPath, iconPath);
 
         setIcon(Util::getFileIcon(dirPath));
+    });
+
+    connect(ui->btn_select, &QToolButton::clicked, this, [=]{
+       auto iconPath = QFileDialog::getOpenFileName(this, "Select an icon", dirPath, "Icon Files (*.ico *.exe)");
+       if (iconPath.isEmpty()) return;
+       addIconCandidate(iconPath);
+       int index = ui->comboBox->count() - 1;
+       ui->comboBox->setCurrentIndex(index);
     });
 
     setIcon(Util::getFileIcon(dirPath));
@@ -47,10 +55,9 @@ FolderIconSelector::FolderIconSelector(const QString& dirPath, QWidget *parent)
         auto files = Util::getExeFiles(dirPath);
         // 展示可选exe图标
         ui->comboBox->setUpdatesEnabled(false);
-        for (const QString& path : files) {
-            QIcon icon = Util::getFileIcon(path);
-            ui->comboBox->addItem(icon, QFileInfo(path).fileName(), QDir::toNativeSeparators(path));
-        }
+        for (const QString& path : files)
+            addIconCandidate(path);
+
         // 选中当前文件夹的图标
         auto iconPath = Util::getFolderIconPath(dirPath);
         if (!iconPath.isEmpty()) {
@@ -102,6 +109,11 @@ void FolderIconSelector::setIcon(const QIcon& icon)
 void FolderIconSelector::openFolder()
 {
     QDesktopServices::openUrl(QUrl::fromLocalFile(dirPath));
+}
+
+void FolderIconSelector::addIconCandidate(const QString& path)
+{
+    ui->comboBox->addItem(Util::getFileIcon(path), QFileInfo(path).fileName(), QDir::toNativeSeparators(path));
 }
 
 bool FolderIconSelector::eventFilter(QObject* obj, QEvent* event)
