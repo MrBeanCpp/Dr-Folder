@@ -19,7 +19,7 @@ Widget::Widget(QWidget *parent)
     ui->setupUi(this);
     this->lw = ui->listWidget;
     setWindowFlag(Qt::WindowMaximizeButtonHint, false);
-    setWindowTitle("Dr.Folder - MrBeanC");
+    setWindowTitle("Dr.Folder - MrBeanCpp");
     this->setAcceptDrops(true);
 
     // 创建状态栏

@@ -31,8 +31,8 @@ FolderIconSelector::FolderIconSelector(const QString& dirPath, QWidget *parent)
 
         Util::setFolderIcon(dirPath, filePath);
 
-        int selectedIndex = ui->comboBox->currentIndex();
-        setIcon(ui->comboBox->itemIcon(selectedIndex));
+        int curIndex = ui->comboBox->currentIndex();
+        setIcon(ui->comboBox->itemIcon(curIndex));
     });
 
     setIcon(iconPro.icon(QFileInfo(dirPath)));
@@ -40,7 +40,7 @@ FolderIconSelector::FolderIconSelector(const QString& dirPath, QWidget *parent)
     // 异步，否则QCombobox的宽度会不太正常（不对齐）
     QTimer::singleShot(0, this, [=](){
         QDir dir(dirPath);
-        ui->label->setText(dir.dirName());
+        ui->label->setText(dir.isRoot() ? dirPath : dir.dirName());
         auto files = Util::getExeFiles(dirPath);
         // 展示可选exe图标
         ui->comboBox->setUpdatesEnabled(false);
@@ -64,9 +64,8 @@ FolderIconSelector::FolderIconSelector(const QString& dirPath, QWidget *parent)
             QList<int> idxs;
             for (int i = 0; i < ui->comboBox->count(); ++i) {
                 auto filePath = ui->comboBox->itemData(i).toString();
-                if (!Util::hasCustomIcon(filePath)) { // 耗时操作，必须放在子线程
+                if (!Util::hasCustomIcon(filePath)) // 耗时操作，必须放在子线程
                     idxs << i;
-                }
             }
             emit removeItems(idxs); // GUI操作必须放在主线程，通过信号与槽传递
         });
@@ -75,7 +74,7 @@ FolderIconSelector::FolderIconSelector(const QString& dirPath, QWidget *parent)
     qRegisterMetaType<QList<int>>("QList<int>"); // for signal
     connect(this, &FolderIconSelector::removeItems, this, [=](QList<int> idxs){
         for (int i = idxs.size() - 1; i >= 0; --i) {
-            qDebug() << "clear default icon exe:" << ui->comboBox->itemText(idxs[i]);
+            qDebug() << "clear default icon:" << ui->comboBox->itemText(idxs[i]);
             ui->comboBox->removeItem(idxs[i]);
         }
         ui->comboBox->setEnabled(true);
