@@ -17,7 +17,56 @@
    <string>Widget</string>
   </property>
   <property name="styleSheet">
-   <string notr="true">font: 10pt &quot;Microsoft YaHei UI&quot;;</string>
+   <string notr="true">* { font: 10pt &quot;Microsoft YaHei UI&quot;; }
+
+QMenu {
+    background-color: #FFFFFF;
+    border: 1px solid #BDBDBD;
+    /*border-radius: 4px;*/
+    padding: 2px 0px;
+    font-size: 9pt;
+}
+
+QMenu::item {
+    padding: 3px 24px 3px 18px;
+    background-color: transparent;
+    color: #000000;
+    border-radius: 3px;
+    margin: 1px 3px;
+}
+
+QMenu::item:selected {
+    background-color: #E5E5E5;
+}
+
+QMenu::separator {
+    height: 1px;
+    background-color: #BDBDBD;
+    margin: 2px 3px;
+}
+
+QMenu::icon {
+    padding-left: 12px;
+}
+
+QMenu::indicator {
+    width: 14px;
+    height: 14px;
+}
+
+QMenu::right-arrow {
+    image: none;
+    width: 10px;
+    height: 10px;
+}
+
+QMenu::right-arrow::after {
+    content: &quot;›&quot;;
+    color: #000000;
+    font-size: 12px;
+    padding-right: 6px;
+}
+</string>
   </property>
   <layout class="QVBoxLayout" name="verticalLayout">
    <property name="spacing">
@@ -37,6 +86,9 @@
    </property>
    <item>
     <layout class="QHBoxLayout" name="horizontalLayout">
+     <property name="spacing">
+      <number>5</number>
+     </property>
      <item>
       <widget class="QLineEdit" name="lineEdit">
        <property name="minimumSize">
@@ -46,12 +98,39 @@
         </size>
        </property>
        <property name="styleSheet">
-        <string notr="true"/>
+        <string notr="true">QLineEdit {
+    background-color: #FFFFFF;
+    border: 1px solid #BDBDBD;
+    border-radius: 4px;
+    padding: 2px 8px;
+    color: #000000;
+    font-size: 10pt;
+}
+
+QLineEdit:focus {
+    border: 1px solid #0078D4;
+}
+
+QLineEdit:hover {
+    border: 1px solid #8C8C8C;
+}</string>
        </property>
       </widget>
      </item>
      <item>
       <widget class="QToolButton" name="btn_select">
+       <property name="sizePolicy">
+        <sizepolicy hsizetype="Fixed" vsizetype="Preferred">
+         <horstretch>0</horstretch>
+         <verstretch>0</verstretch>
+        </sizepolicy>
+       </property>
+       <property name="minimumSize">
+        <size>
+         <width>30</width>
+         <height>0</height>
+        </size>
+       </property>
        <property name="text">
         <string>...</string>
        </property>
@@ -65,21 +144,11 @@
          <verstretch>0</verstretch>
         </sizepolicy>
        </property>
-       <property name="text">
-        <string>SubDirs</string>
-       </property>
-      </widget>
-     </item>
-     <item>
-      <widget class="QToolButton" name="btn_self">
-       <property name="sizePolicy">
-        <sizepolicy hsizetype="Fixed" vsizetype="Preferred">
-         <horstretch>0</horstretch>
-         <verstretch>0</verstretch>
-        </sizepolicy>
+       <property name="styleSheet">
+        <string notr="true"/>
        </property>
        <property name="text">
-        <string>Self</string>
+        <string>List Sub-Dirs</string>
        </property>
       </widget>
      </item>

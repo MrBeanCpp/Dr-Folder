@@ -10,6 +10,7 @@
 #include <QDragEnterEvent>
 #include <QDropEvent>
 #include <QMimeData>
+#include <QMenu>
 
 Widget::Widget(QWidget *parent)
     : QWidget(parent)
@@ -25,7 +26,6 @@ Widget::Widget(QWidget *parent)
     statusBar = new QStatusBar(this);
     statusBar->setFixedHeight(15);
     this->layout()->addWidget(statusBar);
-    statusBar->showMessage("Ready", 1000);
 
     lw->setAlternatingRowColors(true);
     lw->hide();
@@ -33,22 +33,21 @@ Widget::Widget(QWidget *parent)
     ui->placeholder->setCursor(Qt::PointingHandCursor);
     connect(ui->placeholder, &QPushButton::clicked, ui->btn_select, &QToolButton::click);
 
-    connect(ui->btn_select, &QToolButton::clicked, this, [=](){
+    connect(ui->btn_select, &QToolButton::clicked, this, [=]{
        QString path = QFileDialog::getExistingDirectory(this, "Select a folder");
        ui->lineEdit->setText(QDir::toNativeSeparators(path));
     });
 
-    connect(ui->btn_subdir, &QToolButton::clicked, this, [=](){
-        if (!beforeAddItems()) return;
-
-        listSubDirs(ui->lineEdit->text());
+    connect(ui->btn_subdir, &QToolButton::clicked, this, [=]{
+        listFolders(ui->lineEdit->text());
     });
 
-    connect(ui->btn_self, &QToolButton::clicked, this, [=](){
-        if (!beforeAddItems()) return;
+    ui->btn_subdir->setPopupMode(QToolButton::MenuButtonPopup);
 
-        addListItem(ui->lineEdit->text());
-    });
+    QMenu *menu = new QMenu(ui->btn_subdir);
+    menu->addAction("Only Self", this, [=]{ listFolders(ui->lineEdit->text(), true); });
+
+    ui->btn_subdir->setMenu(menu);
 }
 
 Widget::~Widget()
@@ -76,6 +75,16 @@ void Widget::listSubDirs(const QString& dirPath)
             qApp->processEvents();
     }
     statusBar->showMessage("Done.", 2000);
+}
+
+void Widget::listFolders(const QString& dirPath, bool onlySelf)
+{
+    beforeAddItems();
+    if (onlySelf) {
+        addListItem(dirPath);
+    } else {
+        listSubDirs(dirPath);
+    }
 }
 
 bool Widget::beforeAddItems()
@@ -113,5 +122,5 @@ void Widget::dropEvent(QDropEvent* event)
     }
     ui->lineEdit->setText(QDir::toNativeSeparators(path));
 
-    ui->btn_self->click(); // default Self
+    listFolders(path, true); // default Self
 }
