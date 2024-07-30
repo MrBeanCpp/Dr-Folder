@@ -85,7 +85,7 @@ QString Util::getFolderIconPath(const QString& folderPath) {
     }
 }
 
-// Windows API很快，< 1ms，但是假如先获取图标再转为QImage判断，就很慢 > 40ms
+// 在没有缓存的情况下（重启），无论是什么方法，都不可避免要读取icon，都很慢
 bool Util::hasCustomIcon(const QString& exePath)
 {
     HMODULE hModule = LoadLibraryEx(exePath.toStdWString().c_str(), NULL, LOAD_LIBRARY_AS_DATAFILE);
@@ -111,5 +111,22 @@ bool Util::hasCustomIcon(const QString& exePath)
 
     FreeLibrary(hModule);
     return hasIcon;
+}
+// slow
+bool Util::isUsingDefaultIcon(const QString& exePath)
+{
+    UINT iconCount = ExtractIconEx(exePath.toStdWString().c_str(), -1, NULL, NULL, 0);
+    return iconCount == 0;
+}
+// slow
+bool Util::isDefaultExeIcon(const QIcon& icon) {
+    static const QSize IconSize(16, 16);
+
+    static auto defaultIcon = []() -> QIcon {
+        QFileIconProvider iconProvider;
+        return iconProvider.icon(QFileInfo("invalid_path_mrbeanc.exe"));
+    }().pixmap(IconSize).toImage();
+
+    return icon.pixmap(IconSize).toImage() == defaultIcon;
 }
 

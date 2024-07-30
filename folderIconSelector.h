@@ -19,6 +19,10 @@ public:
 private:
     // set Icon to Label
     void setIcon(const QIcon& icon);
+    void openFolder();
+
+signals:
+    void removeItems(QList<int> idxs);
 
 private:
     Ui::FolderIconSelector *ui;
@@ -33,6 +37,7 @@ public:
     // QWidget interface
 protected:
     virtual void contextMenuEvent(QContextMenuEvent* event) override;
+    virtual void mouseDoubleClickEvent(QMouseEvent* event) override;
 };
 
 #endif // FOLDERICONSELECTOR_H

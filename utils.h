@@ -12,6 +12,8 @@ QStringList getExeFiles(const QString& dirPath);
 QString getFolderIconPath(const QString& folderPath);
 // 判断exe是否有自定义图标
 bool hasCustomIcon(const QString& exePath);
+bool isUsingDefaultIcon(const QString& exePath);
+bool isDefaultExeIcon(const QIcon& icon);
 }
 
 #endif // UTILS_H

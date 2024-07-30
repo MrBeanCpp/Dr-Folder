@@ -24,6 +24,7 @@ private:
     void listSubDirs(const QString& dirPath);
     void listFolders(const QString& dirPath, bool onlySelf = false);
     bool beforeAddItems();
+    void clearListItems();
 
 private:
     Ui::Widget *ui;

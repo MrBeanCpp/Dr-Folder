@@ -11,7 +11,7 @@
 #include <QDropEvent>
 #include <QMimeData>
 #include <QMenu>
-
+#include <QElapsedTimer>
 Widget::Widget(QWidget *parent)
     : QWidget(parent)
     , ui(new Ui::Widget)
@@ -33,8 +33,13 @@ Widget::Widget(QWidget *parent)
     ui->placeholder->setCursor(Qt::PointingHandCursor);
     connect(ui->placeholder, &QPushButton::clicked, ui->btn_select, &QToolButton::click);
 
+    connect(ui->lineEdit, &QLineEdit::returnPressed, this, [=]{
+        ui->btn_subdir->click();
+    });
+
     connect(ui->btn_select, &QToolButton::clicked, this, [=]{
        QString path = QFileDialog::getExistingDirectory(this, "Select a folder");
+       if (path.isEmpty()) return;
        ui->lineEdit->setText(QDir::toNativeSeparators(path));
     });
 
@@ -58,7 +63,7 @@ Widget::~Widget()
 void Widget::addListItem(const QString& path)
 {
     QListWidgetItem *item = new QListWidgetItem(lw);
-    FolderIconSelector *customWidget = new FolderIconSelector(path);
+    FolderIconSelector *customWidget = new FolderIconSelector(path, lw);
     item->setSizeHint(customWidget->sizeHint());
     lw->setItemWidget(item, customWidget);
 }
@@ -70,8 +75,8 @@ void Widget::listSubDirs(const QString& dirPath)
     int i = 0;
     for (const auto& name : dirs) {
         addListItem(dir.absoluteFilePath(name));
-        statusBar->showMessage(QString("Loading... %1/%2").arg(i).arg(dirs.size()), 1000);
-        if (++i % 5 == 0)
+        statusBar->showMessage(QString("Loading... %1/%2: %3").arg(i).arg(dirs.size()).arg(name), 1000);
+        if (++i % 2 == 0)
             qApp->processEvents();
     }
     statusBar->showMessage("Done.", 2000);
@@ -93,7 +98,7 @@ bool Widget::beforeAddItems()
     bool isOk = QFile::exists(path) && QFileInfo(path).isDir();
 
     if (isOk) {
-        lw->clear();
+        clearListItems();
         ui->placeholder->hide();
         lw->show();
     } else {
@@ -101,6 +106,18 @@ bool Widget::beforeAddItems()
     }
 
     return isOk;
+}
+
+void Widget::clearListItems()
+{
+    while (lw->count() > 0) {
+        QListWidgetItem *item = lw->takeItem(0); // 移除但不删除项
+        QWidget *widget = lw->itemWidget(item);
+        if (widget) {
+            delete widget; // 删除关联的子控件
+        }
+        delete item; // 删除列表项
+    }
 }
 
 void Widget::dragEnterEvent(QDragEnterEvent* event)

@@ -8,6 +8,9 @@
 #include <QContextMenuEvent>
 #include <QMenu>
 #include <shlwapi.h>
+#include <QElapsedTimer>
+#include <QDesktopServices>
+#include <QtConcurrent>
 
 QFileIconProvider FolderIconSelector::iconPro;
 FolderIconSelector::FolderIconSelector(const QString& dirPath, QWidget *parent)
@@ -42,7 +45,6 @@ FolderIconSelector::FolderIconSelector(const QString& dirPath, QWidget *parent)
         // 展示可选exe图标
         ui->comboBox->setUpdatesEnabled(false);
         for (const QString& path : files) {
-            if (!Util::hasCustomIcon(path)) continue; // 过滤没有自定义图标的exe
             QIcon icon = iconPro.icon(QFileInfo(path));
             ui->comboBox->addItem(icon, QFileInfo(path).fileName(), QDir::toNativeSeparators(path));
         }
@@ -54,8 +56,31 @@ FolderIconSelector::FolderIconSelector(const QString& dirPath, QWidget *parent)
                 ui->comboBox->setCurrentIndex(index);
         }
         ui->comboBox->setUpdatesEnabled(true);
+
+        ui->comboBox->setEnabled(false);
+        ui->btn_apply->setEnabled(false);
+        // 过滤没有自定义图标的exe
+        QtConcurrent::run([=](){
+            QList<int> idxs;
+            for (int i = 0; i < ui->comboBox->count(); ++i) {
+                auto filePath = ui->comboBox->itemData(i).toString();
+                if (!Util::hasCustomIcon(filePath)) { // 耗时操作，必须放在子线程
+                    idxs << i;
+                }
+            }
+            emit removeItems(idxs); // GUI操作必须放在主线程，通过信号与槽传递
+        });
     });
 
+    qRegisterMetaType<QList<int>>("QList<int>"); // for signal
+    connect(this, &FolderIconSelector::removeItems, this, [=](QList<int> idxs){
+        for (int i = idxs.size() - 1; i >= 0; --i) {
+            qDebug() << "clear default icon exe:" << ui->comboBox->itemText(idxs[i]);
+            ui->comboBox->removeItem(idxs[i]);
+        }
+        ui->comboBox->setEnabled(true);
+        ui->btn_apply->setEnabled(true);
+    });
 }
 
 FolderIconSelector::~FolderIconSelector()
@@ -72,6 +97,11 @@ void FolderIconSelector::setIcon(const QIcon& icon)
     ui->icon->setPixmap(iconPixmap);
 }
 
+void FolderIconSelector::openFolder()
+{
+    QDesktopServices::openUrl(QUrl::fromLocalFile(dirPath));
+}
+
 bool FolderIconSelector::eventFilter(QObject* obj, QEvent* event)
 {
     if(obj == ui->comboBox) {
@@ -84,10 +114,19 @@ bool FolderIconSelector::eventFilter(QObject* obj, QEvent* event)
 void FolderIconSelector::contextMenuEvent(QContextMenuEvent* event)
 {
     QMenu menu(this);
-    QAction *action_restore = menu.addAction("Restore Default Icon"); // del desktop.ini
-    connect(action_restore, &QAction::triggered, this, [=]() {
+    menu.addAction("Open Folder", this, [=]{
+        openFolder();
+    });
+    menu.addAction("Restore Default Icon", this, [=]{  // del desktop.ini
         setIcon(iconPro.icon(QFileIconProvider::Folder));
         Util::restoreFolderIcon(dirPath);
     });
     menu.exec(event->globalPos());
+}
+
+void FolderIconSelector::mouseDoubleClickEvent(QMouseEvent* event)
+{
+    if (event->button() == Qt::LeftButton)
+        openFolder();
+    QWidget::mouseDoubleClickEvent(event);
 }
