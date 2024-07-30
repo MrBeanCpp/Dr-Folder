@@ -11,7 +11,7 @@
 #include <QDropEvent>
 #include <QMimeData>
 #include <QMenu>
-#include <QElapsedTimer>
+
 Widget::Widget(QWidget *parent)
     : QWidget(parent)
     , ui(new Ui::Widget)

@@ -12,7 +12,6 @@
 #include <QDesktopServices>
 #include <QtConcurrent>
 
-QFileIconProvider FolderIconSelector::iconPro;
 FolderIconSelector::FolderIconSelector(const QString& dirPath, QWidget *parent)
     : QWidget(parent)
     , ui(new Ui::FolderIconSelector)
@@ -26,16 +25,20 @@ FolderIconSelector::FolderIconSelector(const QString& dirPath, QWidget *parent)
     ui->comboBox->installEventFilter(this);
 
     connect(ui->btn_apply, &QPushButton::clicked, this, [=](){
-        auto filePath = ui->comboBox->currentData().toString();
-        if (filePath.isEmpty()) return;
+        auto iconPath = ui->comboBox->currentData().toString();
+        if (iconPath.isEmpty()) return;
 
-        Util::setFolderIcon(dirPath, filePath);
+        QDir dir(dirPath);
+        if (dir.exists(iconPath)) // 若icon在folder内，则转为相对路径
+            iconPath = QDir(dirPath).relativeFilePath(iconPath);
 
-        int curIndex = ui->comboBox->currentIndex();
-        setIcon(ui->comboBox->itemIcon(curIndex));
+        qDebug() << "set folder icon:" << iconPath << dirPath;
+        Util::setFolderIcon(dirPath, iconPath);
+
+        setIcon(Util::getFileIcon(dirPath));
     });
 
-    setIcon(iconPro.icon(QFileInfo(dirPath)));
+    setIcon(Util::getFileIcon(dirPath));
 
     // 异步，否则QCombobox的宽度会不太正常（不对齐）
     QTimer::singleShot(0, this, [=](){
@@ -45,13 +48,13 @@ FolderIconSelector::FolderIconSelector(const QString& dirPath, QWidget *parent)
         // 展示可选exe图标
         ui->comboBox->setUpdatesEnabled(false);
         for (const QString& path : files) {
-            QIcon icon = iconPro.icon(QFileInfo(path));
+            QIcon icon = Util::getFileIcon(path);
             ui->comboBox->addItem(icon, QFileInfo(path).fileName(), QDir::toNativeSeparators(path));
         }
         // 选中当前文件夹的图标
         auto iconPath = Util::getFolderIconPath(dirPath);
         if (!iconPath.isEmpty()) {
-            int index = ui->comboBox->findData(iconPath, Qt::UserRole, Qt::MatchContains);
+            int index = ui->comboBox->findData(iconPath);
             if (index != -1)
                 ui->comboBox->setCurrentIndex(index);
         }
@@ -117,8 +120,8 @@ void FolderIconSelector::contextMenuEvent(QContextMenuEvent* event)
         openFolder();
     });
     menu.addAction("Restore Default Icon", this, [=]{  // del desktop.ini
-        setIcon(iconPro.icon(QFileIconProvider::Folder));
         Util::restoreFolderIcon(dirPath);
+        setIcon(Util::getFileIcon(dirPath));
     });
     menu.exec(event->globalPos());
 }

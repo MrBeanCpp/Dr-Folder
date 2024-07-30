@@ -1,4 +1,5 @@
 QT       += core gui concurrent
+QT       += winextras
 
 greaterThan(QT_MAJOR_VERSION, 4): QT += widgets
 
@@ -28,7 +29,7 @@ qnx: target.path = /tmp/$${TARGET}/bin
 else: unix:!android: target.path = /opt/$${TARGET}/bin
 !isEmpty(target.path): INSTALLS += target
 
-LIBS += -lShlwapi -lUser32
+LIBS += -lShlwapi -lUser32 -lOle32
 
 msvc {
     QMAKE_CFLAGS += /utf-8

@@ -14,6 +14,7 @@ QString getFolderIconPath(const QString& folderPath);
 bool hasCustomIcon(const QString& exePath);
 bool isUsingDefaultIcon(const QString& exePath);
 bool isDefaultExeIcon(const QIcon& icon);
+QIcon getFileIcon(QString filePath);
 }
 
 #endif // UTILS_H

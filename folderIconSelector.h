@@ -1,7 +1,6 @@
 #ifndef FOLDERICONSELECTOR_H
 #define FOLDERICONSELECTOR_H
 
-#include <QFileIconProvider>
 #include <QWidget>
 
 namespace Ui {
@@ -28,7 +27,6 @@ private:
     Ui::FolderIconSelector *ui;
 
     const QString dirPath;
-    static QFileIconProvider iconPro; // 获取图标是耗时操作，但是貌似会缓存
 
     // QObject interface
 public:

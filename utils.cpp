@@ -4,9 +4,8 @@
 #include <shlobj.h>
 #include <shlwapi.h>
 #include <QDirIterator>
+#include <QtWinExtras>
 #include <QFileIconProvider>
-#include <QSettings>
-#include <QTextCodec>
 
 void Util::setFolderIcon(const QString &folderPath, const QString &iconPath, int index)
 {
@@ -128,5 +127,23 @@ bool Util::isDefaultExeIcon(const QIcon& icon) {
     }().pixmap(IconSize).toImage();
 
     return icon.pixmap(IconSize).toImage() == defaultIcon;
+}
+
+// QFileIconProvider::icon会缓存，导致无法更新图标，故采用SHGetFileInfo
+QIcon Util::getFileIcon(QString filePath) {
+    filePath = QDir::toNativeSeparators(filePath); // IMPORTANT: 否则会找不到文件
+
+    CoInitialize(NULL); // important for SHGetFileInfo，否则失败
+    SHFILEINFO sfi;
+    memset(&sfi, 0, sizeof(SHFILEINFO));
+
+    QIcon icon;
+    if (SHGetFileInfo(filePath.toStdWString().c_str(), 0, &sfi, sizeof(SHFILEINFO), SHGFI_ICON)) {
+        icon = QtWin::fromHICON(sfi.hIcon);
+        DestroyIcon(sfi.hIcon);
+    }
+    CoUninitialize();
+
+    return icon;
 }
 
