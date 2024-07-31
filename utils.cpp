@@ -129,7 +129,11 @@ bool Util::isDefaultExeIcon(const QIcon& icon) {
     return icon.pixmap(IconSize).toImage() == defaultIcon;
 }
 
-// QFileIconProvider::icon会缓存，导致无法更新图标，故采用SHGetFileInfo
+// QFileIconProvider::icon会缓存，导致无法更新图标，故采用 SHGetFileInfo
+// 但是QFileIconProvider::icon优化更好，速度更快，所以只在必要的地方手动调用 SHGetFileInfo
+// 其实QFileIconProvider::icon().pixmap()也是调用SHGetFileInfo
+// .icon()其实并没有获取到图像，只是传入了IconEngine，真正获取图像是在.pixmap()时
+// 更快的原因可能是采用了多线程获取pixmap，或者分区域绘制
 QIcon Util::getFileIcon(QString filePath) {
     filePath = QDir::toNativeSeparators(filePath); // IMPORTANT: 否则会找不到文件
 

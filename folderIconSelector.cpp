@@ -12,6 +12,7 @@
 #include <QDesktopServices>
 #include <QtConcurrent>
 #include <QFileDialog>
+#include <QFileIconProvider>
 
 FolderIconSelector::FolderIconSelector(const QString& dirPath, QWidget *parent)
     : QWidget(parent)
@@ -84,7 +85,7 @@ FolderIconSelector::FolderIconSelector(const QString& dirPath, QWidget *parent)
     qRegisterMetaType<QList<int>>("QList<int>"); // for signal
     connect(this, &FolderIconSelector::removeItems, this, [=](QList<int> idxs){
         for (int i = idxs.size() - 1; i >= 0; --i) {
-            qDebug() << "clear default icon:" << ui->comboBox->itemText(idxs[i]);
+            // qDebug() << "clear default icon:" << ui->comboBox->itemText(idxs[i]);
             ui->comboBox->removeItem(idxs[i]);
         }
         ui->comboBox->setEnabled(true);
@@ -118,7 +119,10 @@ void FolderIconSelector::openFolder()
 
 void FolderIconSelector::addIconCandidate(const QString& path)
 {
-    ui->comboBox->addItem(Util::getFileIcon(path), QFileInfo(path).fileName(), QDir::toNativeSeparators(path));
+    static QFileIconProvider iconPro; // exe可用QFileIconProvider更快，folder用SHGetFileInfo防止缓存
+    auto icon = iconPro.icon(QFileInfo(path));
+    auto filename = QFileInfo(path).fileName();
+    ui->comboBox->addItem(icon, filename, QDir::toNativeSeparators(path));
 }
 
 bool FolderIconSelector::eventFilter(QObject* obj, QEvent* event)
