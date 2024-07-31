@@ -12,8 +12,9 @@
 #include <QDesktopServices>
 #include <QtConcurrent>
 #include <QFileDialog>
-#include <QFileIconProvider>
+#include <QPixmapCache>
 
+QFileIconProvider FolderIconSelector::iconPro;
 FolderIconSelector::FolderIconSelector(const QString& dirPath, QWidget *parent)
     : QWidget(parent)
     , ui(new Ui::FolderIconSelector)
@@ -36,7 +37,8 @@ FolderIconSelector::FolderIconSelector(const QString& dirPath, QWidget *parent)
         qDebug() << "Folder:" << dirPath << "Icon:" << iconPath;
         Util::setFolderIcon(dirPath, iconPath);
 
-        setIcon(Util::getFileIcon(dirPath));
+        QPixmapCache::clear(); // 清除缓存，否则文件夹图标不会更新
+        setIcon(iconPro.icon(dirPath));
     });
 
     connect(ui->btn_select, &QToolButton::clicked, this, [=]{
@@ -47,7 +49,7 @@ FolderIconSelector::FolderIconSelector(const QString& dirPath, QWidget *parent)
        ui->comboBox->setCurrentIndex(index);
     });
 
-    setIcon(Util::getFileIcon(dirPath));
+    setIcon(iconPro.icon(dirPath));
 
     // 异步，否则QCombobox的宽度会不太正常（不对齐）
     QTimer::singleShot(0, this, [=](){
@@ -119,8 +121,7 @@ void FolderIconSelector::openFolder()
 
 void FolderIconSelector::addIconCandidate(const QString& path)
 {
-    static QFileIconProvider iconPro; // exe可用QFileIconProvider更快，folder用SHGetFileInfo防止缓存
-    auto icon = iconPro.icon(QFileInfo(path));
+    auto icon = iconPro.icon(path);
     auto filename = QFileInfo(path).fileName();
     ui->comboBox->addItem(icon, filename, QDir::toNativeSeparators(path));
 }
@@ -142,7 +143,8 @@ void FolderIconSelector::contextMenuEvent(QContextMenuEvent* event)
     });
     menu.addAction("Restore Default Icon", this, [=]{  // del desktop.ini
         Util::restoreFolderIcon(dirPath);
-        setIcon(Util::getFileIcon(dirPath));
+        QPixmapCache::clear(); // 清除缓存，否则文件夹图标不会更新
+        setIcon(iconPro.icon(dirPath));
     });
     menu.exec(event->globalPos());
 }

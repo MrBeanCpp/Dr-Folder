@@ -134,6 +134,9 @@ bool Util::isDefaultExeIcon(const QIcon& icon) {
 // 其实QFileIconProvider::icon().pixmap()也是调用SHGetFileInfo
 // .icon()其实并没有获取到图像，只是传入了IconEngine，真正获取图像是在.pixmap()时
 // 更快的原因可能是采用了多线程获取pixmap，或者分区域绘制
+
+// 通过源码可以发现，QFileIconProvider只会缓存Folder图标，不缓存文件图标
+// 缓存方式为：QPixmapCache，所以调用clear()静态方法就可以清空
 QIcon Util::getFileIcon(QString filePath) {
     filePath = QDir::toNativeSeparators(filePath); // IMPORTANT: 否则会找不到文件
 

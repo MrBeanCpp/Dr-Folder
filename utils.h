@@ -14,6 +14,7 @@ QString getFolderIconPath(const QString& folderPath);
 bool hasCustomIcon(const QString& exePath);
 bool isUsingDefaultIcon(const QString& exePath);
 bool isDefaultExeIcon(const QIcon& icon);
+Q_DECL_DEPRECATED_X("Use QFileIconProvider::icon() + QPixmapCache::clear() instead")
 QIcon getFileIcon(QString filePath);
 bool isInDir(const QString& filePath, const QString& dirPath);
 }

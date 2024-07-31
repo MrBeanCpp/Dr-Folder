@@ -2,6 +2,7 @@
 #define FOLDERICONSELECTOR_H
 
 #include <QWidget>
+#include <QFileIconProvider>
 
 namespace Ui {
 class FolderIconSelector;
@@ -30,6 +31,7 @@ private:
     Ui::FolderIconSelector *ui;
 
     const QString dirPath;
+    static QFileIconProvider iconPro;
 
     // QObject interface
 public:
