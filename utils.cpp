@@ -12,13 +12,13 @@ void Util::setFolderIcon(const QString &folderPath, const QString &iconPath, int
     SHFOLDERCUSTOMSETTINGS fcs = {0}; // 初始化所有成员为0
     fcs.dwSize = sizeof(SHFOLDERCUSTOMSETTINGS);
     fcs.dwMask = FCSM_ICONFILE;
-    auto iconWStr = iconPath.toStdWString(); // IMPORTANT: 不能写为 iconPath.toStdWString().c_str()，因为返回的是临时对象，导致指针无效
+    auto iconWStr = QDir::toNativeSeparators(iconPath).toStdWString(); // IMPORTANT: 不能写为 iconPath.toStdWString().c_str()，因为返回的是临时对象，导致指针无效
     fcs.pszIconFile = LPWSTR(iconWStr.c_str());
     fcs.cchIconFile = 0;
     fcs.iIconIndex = index;
 
     // 这里返回临时对象指针没事，因为语句没结束不会被释放
-    HRESULT hr = SHGetSetFolderCustomSettings(&fcs, folderPath.toStdWString().c_str(), FCS_FORCEWRITE);
+    HRESULT hr = SHGetSetFolderCustomSettings(&fcs, QDir::toNativeSeparators(folderPath).toStdWString().c_str(), FCS_FORCEWRITE);
     if (FAILED(hr)) {
         qWarning() << "Failed to set folder icon";
     }

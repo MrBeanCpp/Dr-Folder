@@ -63,8 +63,10 @@ FolderIconSelector::FolderIconSelector(const QString& dirPath, QWidget *parent)
 
         // 选中当前文件夹的图标
         auto iconPath = Util::getFolderIconPath(dirPath);
+        iconPath = QDir::toNativeSeparators(iconPath);
+
         if (!iconPath.isEmpty()) {
-            int index = ui->comboBox->findData(iconPath);
+            int index = ui->comboBox->findData(iconPath, Qt::UserRole, Qt::MatchFixedString); // CaseInsensitive
             if (index != -1)
                 ui->comboBox->setCurrentIndex(index);
         }
