@@ -62,7 +62,7 @@ QStringList Util::getExeFiles(const QString& dirPath) {
 
     // 获取绝对路径
     for (const auto& name : qAsConst(files)) {
-        if (name.startsWith("unins", Qt::CaseInsensitive)) continue; // 忽略卸载程序
+        if (name.startsWith("unins", Qt::CaseInsensitive) || name.startsWith("卸载")) continue; // 忽略卸载程序
         res.push_back(dir.absoluteFilePath(name));
     }
 
