@@ -39,7 +39,7 @@ msvc {
 RC_ICONS = imgs/folder.ico
 
 # 版本
-VERSION = 1.1.0
+VERSION = 1.2.0
 # 公司名称
 QMAKE_TARGET_COMPANY = "MrBeanCpp"
 # 文件说明
