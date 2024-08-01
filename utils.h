@@ -6,8 +6,9 @@
 #include <QIcon>
 
 namespace Util {
-void setFolderIcon(const QString &folderPath, const QString &iconPath, int index = 0);
-void restoreFolderIcon(const QString &folderPath);
+bool isFolderWirtable(const QString& path);
+bool setFolderIcon(const QString &folderPath, const QString &iconPath, int index = 0);
+bool restoreFolderIcon(const QString &folderPath);
 QStringList getExeFiles(const QString& dirPath);
 QString getFolderIconPath(const QString& folderPath);
 // 判断exe是否有自定义图标

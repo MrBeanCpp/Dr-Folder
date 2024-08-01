@@ -7,8 +7,25 @@
 #include <QtWinExtras>
 #include <QFileIconProvider>
 
-void Util::setFolderIcon(const QString &folderPath, const QString &iconPath, int index)
+// On NTFS file systems, ownership and permissions checking is disabled by default for performance reasons
+extern Q_CORE_EXPORT int qt_ntfs_permission_lookup;
+
+bool Util::isFolderWirtable(const QString& path)
 {
+    // Permission checking is then turned on and off by incrementing and decrementing qt_ntfs_permission_lookup by 1
+    qt_ntfs_permission_lookup++;
+    bool res = QFileInfo(path).isWritable(); // 与程序是否为管理员权限有关
+    qt_ntfs_permission_lookup--;
+    return res;
+}
+
+bool Util::setFolderIcon(const QString &folderPath, const QString &iconPath, int index)
+{
+    if (!isFolderWirtable(folderPath)) {
+        qWarning() << "No write permission";
+        return false;
+    }
+
     SHFOLDERCUSTOMSETTINGS fcs = {0}; // 初始化所有成员为0
     fcs.dwSize = sizeof(SHFOLDERCUSTOMSETTINGS);
     fcs.dwMask = FCSM_ICONFILE;
@@ -19,9 +36,12 @@ void Util::setFolderIcon(const QString &folderPath, const QString &iconPath, int
 
     // 这里返回临时对象指针没事，因为语句没结束不会被释放
     HRESULT hr = SHGetSetFolderCustomSettings(&fcs, QDir::toNativeSeparators(folderPath).toStdWString().c_str(), FCS_FORCEWRITE);
+    // 即便没有写入权限，这个API也会返回 0，但是实际上并没有写入，靠
     if (FAILED(hr)) {
         qWarning() << "Failed to set folder icon";
+        return false;
     }
+    return true;
 }
 
 QStringList Util::getExeFiles(const QString& dirPath) {
@@ -53,15 +73,16 @@ QStringList Util::getExeFiles(const QString& dirPath) {
 }
 
 // 重置文件夹图标
-void Util::restoreFolderIcon(const QString& folderPath)
+bool Util::restoreFolderIcon(const QString& folderPath)
 {
     QFile iniFile(folderPath + "/desktop.ini");
-    if (!iniFile.exists()) return;
+    if (!iniFile.exists()) return true;
 
     // delete desktop.ini
     iniFile.remove();
     // remove attrib
-    PathUnmakeSystemFolder(folderPath.toStdWString().c_str());
+    // 神奇，folderPath是左斜杠也没事
+    return PathUnmakeSystemFolder(folderPath.toStdWString().c_str());
 
     // 很奇怪 设置图标的时候 PathMakeSystemFolder 不会刷新图标，但是Unmake会刷新
     // 而且 Unmake不会删除 desktop.ini

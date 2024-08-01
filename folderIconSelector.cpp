@@ -13,6 +13,7 @@
 #include <QtConcurrent>
 #include <QFileDialog>
 #include <QPixmapCache>
+#include <QMessageBox>
 
 QFileIconProvider FolderIconSelector::iconPro;
 FolderIconSelector::FolderIconSelector(const QString& dirPath, QWidget *parent)
@@ -35,10 +36,14 @@ FolderIconSelector::FolderIconSelector(const QString& dirPath, QWidget *parent)
             iconPath = QDir(dirPath).relativeFilePath(iconPath);
 
         qDebug() << "Folder:" << dirPath << "Icon:" << iconPath;
-        Util::setFolderIcon(dirPath, iconPath);
-
-        QPixmapCache::clear(); // 清除缓存，否则文件夹图标不会更新
-        setIcon(iconPro.icon(dirPath));
+        if (Util::setFolderIcon(dirPath, iconPath)) {
+            QPixmapCache::clear(); // 清除缓存，否则文件夹图标不会更新
+            setIcon(iconPro.icon(dirPath));
+        } else {
+            showActionFailed();
+            // 貌似在不重启的情况下，无法UAC提权
+            QMessageBox::warning(this, "Failed", "Failed to set folder icon.\nTry restart as [Administrator].");
+        }
     });
 
     connect(ui->btn_select, &QToolButton::clicked, this, [=]{
@@ -128,6 +133,11 @@ void FolderIconSelector::addIconCandidate(const QString& path)
     ui->comboBox->addItem(icon, filename, QDir::toNativeSeparators(path));
 }
 
+void FolderIconSelector::showActionFailed()
+{
+    ui->label->setStyleSheet("QLabel { color: red; background-color: rgba(255,255,0,60); font-weight: bold; border-radius: 6px; }");
+}
+
 bool FolderIconSelector::eventFilter(QObject* obj, QEvent* event)
 {
     if(obj == ui->comboBox) {
@@ -144,9 +154,13 @@ void FolderIconSelector::contextMenuEvent(QContextMenuEvent* event)
         openFolder();
     });
     menu.addAction("Restore Default Icon", this, [=]{  // del desktop.ini
-        Util::restoreFolderIcon(dirPath);
-        QPixmapCache::clear(); // 清除缓存，否则文件夹图标不会更新
-        setIcon(iconPro.icon(dirPath));
+        if (Util::restoreFolderIcon(dirPath)) {
+            QPixmapCache::clear(); // 清除缓存，否则文件夹图标不会更新
+            setIcon(iconPro.icon(dirPath));
+        } else {
+            showActionFailed();
+            QMessageBox::warning(this, "Failed", "Failed to restore default icon.\nTry restart as [Administrator].");
+        }
     });
     menu.exec(event->globalPos());
 }

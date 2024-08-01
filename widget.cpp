@@ -80,7 +80,7 @@ Widget::~Widget()
 void Widget::addListItem(const QString& path)
 {
     QListWidgetItem *item = new QListWidgetItem(lw);
-    FolderIconSelector *customWidget = new FolderIconSelector(path, lw);
+    FolderIconSelector *customWidget = new FolderIconSelector(path);
     item->setSizeHint(customWidget->sizeHint());
     lw->setItemWidget(item, customWidget);
 }

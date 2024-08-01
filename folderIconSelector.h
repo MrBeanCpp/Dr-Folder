@@ -23,6 +23,7 @@ private:
     void setIcon(const QIcon& icon);
     void openFolder();
     void addIconCandidate(const QString& path);
+    void showActionFailed();
 
 signals:
     void removeItems(QList<int> idxs);
