@@ -69,9 +69,10 @@ FolderIconSelector::FolderIconSelector(const QString& dirPath, QWidget *parent)
         // 选中当前文件夹的图标
         auto iconPath = Util::getFolderIconPath(dirPath);
         iconPath = QDir::toNativeSeparators(iconPath);
-
         if (!iconPath.isEmpty()) {
             int index = ui->comboBox->findData(iconPath, Qt::UserRole, Qt::MatchFixedString); // CaseInsensitive
+            if (index == -1)
+                index = findMatchedComboTextIndex(ui->label->text());
             if (index != -1)
                 ui->comboBox->setCurrentIndex(index);
         }
@@ -136,6 +137,18 @@ void FolderIconSelector::addIconCandidate(const QString& path)
 void FolderIconSelector::showActionFailed()
 {
     ui->label->setStyleSheet("QLabel { color: red; background-color: rgba(255,255,0,60); font-weight: bold; border-radius: 6px; }");
+}
+
+int FolderIconSelector::findMatchedComboTextIndex(const QString& labelText)
+{
+    static QRegularExpression regex("[ \\-_]"); // ' ' '-' '_'
+    auto text = labelText.split(regex, Qt::SkipEmptyParts)[0]; // 只取第一个单词
+    for (int i = 0; i < ui->comboBox->count(); ++i) {
+        QString itemText = ui->comboBox->itemText(i);
+        if (itemText.startsWith(text, Qt::CaseInsensitive))
+            return i;
+    }
+    return -1;
 }
 
 bool FolderIconSelector::eventFilter(QObject* obj, QEvent* event)

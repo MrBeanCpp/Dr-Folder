@@ -24,6 +24,7 @@ private:
     void openFolder();
     void addIconCandidate(const QString& path);
     void showActionFailed();
+    int findMatchedComboTextIndex(const QString& labelText);
 
 signals:
     void removeItems(QList<int> idxs);
