@@ -20,3 +20,5 @@
 ## Links
 
 [更改文件夹图标 & 使其立即生效 - MrBeanC-Blog](https://blog.cls.ink/2024/07/27/Set-Folder-Icon-and-Refresh-Cache-Immediately/)
+
+[如何获取文件（夹）图标 without Cache - MrBeanC-Blog](https://blog.cls.ink/2024/08/01/How-to-get-file-folder-icon/)
