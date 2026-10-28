@@ -21,7 +21,7 @@ public:
 
 private:
     void addListItem(const QString& path);
-    void listSubDirs(const QString& dirPath);
+    void listSubDirs(const QString& dirPath, int depth = 1);
     void listFolders(const QString& dirPath, bool onlySelf = false);
     bool beforeAddItems();
     void clearListItems();
@@ -31,6 +31,8 @@ private:
 
     QListWidget* lw = nullptr;
     QStatusBar *statusBar = nullptr;
+
+    static constexpr int MaxTraversalDepth = 5;
 
     // QWidget interface
 protected:

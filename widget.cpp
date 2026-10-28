@@ -85,18 +85,27 @@ void Widget::addListItem(const QString& path)
     lw->setItemWidget(item, customWidget);
 }
 
-void Widget::listSubDirs(const QString& dirPath)
+void Widget::listSubDirs(const QString& dirPath, int depth)
 {
     QDir dir(dirPath);
-    auto dirs = dir.entryList(QDir::AllDirs | QDir::NoDotAndDotDot);
+    auto dirs = dir.entryList(QDir::AllDirs | QDir::NoDotAndDotDot | QDir::NoSymLinks);
     int i = 0;
     for (const auto& name : dirs) {
-        addListItem(dir.absoluteFilePath(name));
-        statusBar->showMessage(QString("Loading... %1/%2: %3").arg(i).arg(dirs.size()).arg(name), 1000);
+        const QString subDirPath = dir.absoluteFilePath(name);
+        addListItem(subDirPath);
+        statusBar->showMessage(QString("Loading depth %1/%2: %3")
+                                   .arg(depth)
+                                   .arg(MaxTraversalDepth)
+                                   .arg(subDirPath),
+                               1000);
         if (++i % 2 == 0)
             qApp->processEvents();
+
+        if (depth < MaxTraversalDepth)
+            listSubDirs(subDirPath, depth + 1);
     }
-    statusBar->showMessage("Done.", 2000);
+    if (depth == 1)
+        statusBar->showMessage("Done.", 2000);
 }
 
 void Widget::listFolders(const QString& dirPath, bool onlySelf)
